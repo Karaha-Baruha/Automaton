@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Fates;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Utility.Raii;
+using ECommons.EzHookManager;
 using ECommons.GameFunctions;
 using ECommons.SimpleGui;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -10,6 +11,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
+using static ECommons.GameFunctions.ObjectFunctions;
 
 namespace Automaton.Features;
 
@@ -19,6 +21,10 @@ public class DateWithDestinyConfiguration
     public List<uint> whitelist = [];
     public List<uint> zones = [];
     [BoolConfig] public bool YokaiMode;
+    [BoolConfig] public bool StayInMeleeRange;
+    [BoolConfig] public bool PrioritizeForlorns = true;
+    [BoolConfig] public bool PrioritizeBonusFates = true;
+    [BoolConfig(DependsOn = nameof(PrioritizeBonusFates))] public bool BonusWhenTwist = false;
     [BoolConfig] public bool EquipWatch = true;
     [BoolConfig] public bool SwapMinions = true;
     [BoolConfig] public bool SwapZones = true;
@@ -108,6 +114,9 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
         .Zip(YokaiZones, (wxy, z) => (wxy.Minion, wxy.Medal, wxy.Weapon, z))
         .ToList();
 
+    private static readonly uint[] ForlornIDs = [7586, 7587];
+    private static readonly uint[] TwistOfFateStatusIDs = [1288, 1289];
+
     private ushort nextFateID;
     private byte fateMaxLevel;
     private ushort fateID;
@@ -127,6 +136,15 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
     {
         ImGuiX.DrawSection("Configuration");
         ImGui.Checkbox("Yo-Kai Mode (Very Experimental)", ref yokaiMode);
+        ImGui.Checkbox("Prioritize targeting Forlorns", ref Config.PrioritizeForlorns);
+        ImGui.Checkbox("Prioritize Fates with EXP bonus", ref Config.PrioritizeBonusFates);
+        ImGui.Indent();
+        using (var _ = ImRaii.Disabled(!Config.PrioritizeBonusFates))
+        {
+            ImGui.Checkbox("Only with Twist of Fate", ref Config.BonusWhenTwist);
+        }
+        ImGui.Unindent();
+        ImGui.Checkbox("Always close to melee range of target", ref Config.StayInMeleeRange);
         ImGui.Checkbox("Full Auto Mode", ref Config.FullAuto);
         if (ImGui.IsItemHovered()) ImGui.SetTooltip($"All the below options will be treated as true if this is enabled.");
         ImGui.Indent();
@@ -174,43 +192,50 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
     private unsafe void OnUpdate(IFramework framework)
     {
         if (!active || Svc.Fates.Count == 0 || Svc.Condition[ConditionFlag.Unknown57] || Svc.Condition[ConditionFlag.Casting]) return;
+
+        // Update target position continually so we don't pingpong
+        if (Svc.Targets.Target != null)
+        {
+            var target = Svc.Targets.Target;
+            TargetPos = target.Position;
+            if ((Config.FullAuto || Config.AutoMoveToMobs) && !IsInMeleeRange(target.HitboxRadius + (Config.StayInMeleeRange ? 0 : 15)))
+            {
+                TargetAndMoveToEnemy(target);
+                return;
+            }
+        }
+
         if (P.Navmesh.IsRunning())
         {
-            if (DistanceToTarget() <= 5)
+            if (DistanceToTarget() < 2 || (Svc.Targets.Target != null && DistanceToHitboxEdge(Svc.Targets.Target.HitboxRadius) <= (Config.StayInMeleeRange ? 0 : 15)))
                 P.Navmesh.Stop();
             else
                 return;
         }
 
-        if (Svc.Condition[ConditionFlag.InCombat] && !Svc.Condition[ConditionFlag.Mounted]) return;
         var cf = FateManager.Instance()->CurrentFate;
         if (cf is not null)
         {
-            FateID = cf->FateId;
             fateMaxLevel = cf->MaxLevel;
+            FateID = cf->FateId;
             if (Svc.Condition[ConditionFlag.Mounted])
                 ExecuteDismount();
-            if (!Svc.Condition[ConditionFlag.InCombat] && Svc.Targets.Target == null)
-            {
-                var target = GetFateMob();
-                if (target != null)
-                {
-                    if ((Config.FullAuto || Config.AutoTarget) && Svc.Targets.Target == null)
-                        Svc.Targets.Target = target;
-                    if ((Config.FullAuto || Config.AutoMoveToMobs) && !P.Navmesh.PathfindInProgress())
-                    {
-                        TargetPos = target.Position;
-                        P.Navmesh.PathfindAndMoveTo(TargetPos, false);
-                        return;
-                    }
-                }
-            }
+
+            var target = GetFateMob();
+            if (target != null) TargetAndMoveToEnemy(target);
         }
         else
             FateID = 0;
 
         if (cf is null)
         {
+            if (Svc.Condition[ConditionFlag.InCombat])
+            {
+                if (Svc.Condition[ConditionFlag.Mounted]) ExecuteDismount();
+                var target = GetMobTargetingPlayer();
+                if (target != null) TargetAndMoveToEnemy(target);
+            }
+
             if (Config.YokaiMode)
             {
                 if (YokaiMinions.Contains(CurrentCompanion))
@@ -264,20 +289,66 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
         }
     }
 
+    private void TargetAndMoveToEnemy(IGameObject target)
+    {
+        if (Svc.Condition[ConditionFlag.Mounted]) ExecuteDismount();
+        TargetPos = target.Position;
+        if ((Config.FullAuto || Config.AutoTarget) && Svc.Targets.Target?.GameObjectId != target.GameObjectId)
+        {
+            Svc.Targets.Target = target;
+        }
+        if ((Config.FullAuto || Config.AutoMoveToMobs) && !P.Navmesh.PathfindInProgress() && !IsInMeleeRange(target.HitboxRadius + (Config.StayInMeleeRange ? 0 : 15)))
+        {
+            P.Navmesh.PathfindAndMoveTo(TargetPos, false);
+        }
+    }
+
     private unsafe void ExecuteActionSafe(ActionType type, uint id) => action.Exec(() => ActionManager.Instance()->UseAction(type, id));
     private void ExecuteMount() => ExecuteActionSafe(ActionType.GeneralAction, 24); // flying mount roulette
     private void ExecuteDismount() => ExecuteActionSafe(ActionType.GeneralAction, 23);
     private void ExecuteJump() => ExecuteActionSafe(ActionType.GeneralAction, 2);
 
-    private IOrderedEnumerable<IFate> GetFates() => Svc.Fates.Where(FateConditions).OrderBy(f => Vector3.Distance(Player.Position, f.Position));
+    private IOrderedEnumerable<IFate> GetFates() => Svc.Fates.Where(FateConditions)
+        .OrderByDescending(x =>
+        Config.PrioritizeBonusFates
+        && x.HasExpBonus
+        && (
+        !Config.BonusWhenTwist
+        || Player.Status.FirstOrDefault(x => TwistOfFateStatusIDs.Contains(x.StatusId)) != null)
+        )
+        .ThenBy(f => Vector3.Distance(Player.Position, f.Position));
     public bool FateConditions(IFate f) => f.GameData.Rule == 1 && f.State != FateState.Preparation && f.Duration <= Config.MaxDuration && f.Progress <= Config.MaxProgress && f.TimeRemaining > Config.MinTimeRemaining && !Config.blacklist.Contains(f.FateId);
+
+    private unsafe DGameObject? GetMobTargetingPlayer()
+        => Svc.Objects
+        .FirstOrDefault(x => x is ICharacter { MaxHp: > 0 }
+        && !x.IsDead
+        && x.IsTargetable
+        && x.IsHostile()
+        && x.ObjectKind == ObjectKind.BattleNpc
+        && x.SubKind == (byte)BattleNpcSubKind.Enemy
+        && x.IsTargetingPlayer());
+
     private unsafe DGameObject? GetFateMob()
-        => Svc.Objects.OrderBy(Player.Object.Distance)
-        .ThenByDescending(x => (x as ICharacter)?.MaxHp ?? 0)
-        .ThenByDescending(x => ObjectFunctions.GetAttackableEnemyCountAroundPoint(x.Position, 5))
-        .Where(x => x.Struct() != null && x.Struct()->FateId == FateID)
-        .Where(x => !x.IsDead && x.IsTargetable && x.IsHostile() && x.ObjectKind == ObjectKind.BattleNpc && x.SubKind == (byte)BattleNpcSubKind.Enemy)
-        .FirstOrDefault(x => Math.Sqrt(Math.Pow(x.Position.X - CurrentFate->Location.X, 2) + Math.Pow(x.Position.Z - CurrentFate->Location.Z, 2)) < CurrentFate->Radius);
+        => Svc.Objects
+        .Where(x => x is ICharacter { MaxHp: > 0 }
+        && !x.IsDead
+        && x.IsTargetable
+        && x.IsHostile()
+        && x.ObjectKind == ObjectKind.BattleNpc
+        && x.SubKind == (byte)BattleNpcSubKind.Enemy
+        && (x.Struct() != null && x.Struct()->FateId == FateID) && Math.Sqrt(Math.Pow(x.Position.X - CurrentFate->Location.X, 2) + Math.Pow(x.Position.Z - CurrentFate->Location.Z, 2)) < CurrentFate->Radius)
+        // Prioritize Forlorns if configured
+        .OrderByDescending(x => Config.PrioritizeForlorns && ForlornIDs.Contains(x.DataId))
+        // Prioritize enemies targeting us
+        .ThenByDescending(x => x.IsTargetingPlayer())
+        // Deprioritize mobs in combat with other players (hopefully avoid botlike pingpong behavior in trash fates)
+        .ThenBy(x => IsTaggedByOther(x) && !x.IsTargetingPlayer())
+        // Prioritize closest enemy        
+        .ThenBy(x => Math.Floor(Vector3.Distance(Player.Position, x.Position)))
+        // Prioritize lowest HP enemy
+        .ThenBy(x => (x as ICharacter)?.CurrentHp)
+        .FirstOrDefault();
 
     private unsafe uint CurrentCompanion => Svc.ClientState.LocalPlayer!.Character()->CompanionObject->Character.GameObject.BaseId;
     private unsafe bool CompanionUnlocked(uint id) => UIState.Instance()->IsCompanionUnlocked(id);
@@ -286,8 +357,14 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
     private unsafe int GetItemCount(uint itemID) => InventoryManager.Instance()->GetInventoryItemCount(itemID);
 
     private unsafe FateContext* CurrentFate => FateManager.Instance()->GetFateById(nextFateID);
+
     private unsafe float DistanceToFate() => Vector3.Distance(CurrentFate->Location, Svc.ClientState.LocalPlayer!.Position);
     private unsafe float DistanceToTarget() => Vector3.Distance(TargetPos, Svc.ClientState.LocalPlayer!.Position);
+
+    //Will be negative if inside hitbox
+    private unsafe float DistanceToHitboxEdge(float hitboxRadius) => DistanceToTarget() - hitboxRadius;
+    private unsafe bool IsInMeleeRange(float hitboxRadius)
+        => DistanceToHitboxEdge(hitboxRadius) < 2;
     public unsafe Vector3 GetRandomPointInFate(ushort fateID)
     {
         var fate = FateManager.Instance()->GetFateById(fateID);
@@ -304,5 +381,12 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
             if (Player.Level > fateMaxLevel)
                 ECommons.Automation.Chat.Instance.SendMessage("/lsync");
         }
+    }
+
+    private static unsafe bool IsTaggedByOther(IGameObject a)
+    {
+        GetNameplateColor ??= EzDelegate.Get<GetNameplateColorDelegate>(GetNameplateColorSig);
+        var plateType = GetNameplateColor(a.Address);
+        return plateType == 10;
     }
 }

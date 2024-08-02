@@ -58,54 +58,6 @@ public unsafe class GettingTooAttached : Tweak<GettingTooAttachedConfiguration>
         }
     }
 
-    //public override void Draw()
-    //{
-    //    if (TryGetAddonByName<AtkUnitBase>("MateriaAttach", out var addon))
-    //    {
-    //        if (!(addon->UldManager.NodeListCount > 1)) return;
-    //        if (!addon->UldManager.NodeList[1]->IsVisible) return;
-
-    //        var node = addon->UldManager.NodeList[1];
-
-    //        if (!node->IsVisible)
-    //            return;
-
-    //        var position = AtkResNodeHelper.GetNodePosition(node);
-
-    //        ImGuiHelpers.ForceNextWindowMainViewport();
-    //        ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(addon->X, addon->Y - height));
-
-    //        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(7f, 7f));
-    //        ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(10f, 10f));
-    //        ImGui.Begin($"###LoopMelding{node->NodeID}", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoNavFocus
-    //        | ImGuiWindowFlags.AlwaysUseWindowPadding | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoSavedSettings);
-
-    //        if (ImGui.Button(!active ? $"Getting Too Attached###StartLooping" : $"Looping. Click to abort.###AbortLoop"))
-    //        {
-    //            if (!active)
-    //            {
-    //                active = true;
-    //                TaskManager.Enqueue(YesAlready.DisableIfNeeded);
-    //                TaskManager.Enqueue(TryGettingTooAttached);
-    //            }
-    //            else
-    //            {
-    //                CancelLoop();
-    //            }
-    //        }
-
-    //        ImGui.SameLine();
-    //        ImGui.PushItemWidth(150);
-    //        if (ImGui.SliderInt("Loops", ref Config.NumberOfLoops, 0, 10000))
-    //            EzConfig.Save();
-
-    //        height = ImGui.GetWindowSize().Y;
-
-    //        ImGui.End();
-    //        ImGui.PopStyleVar(2);
-    //    }
-    //}
-
     private void CancelLoop()
     {
         active = false;
@@ -116,7 +68,7 @@ public unsafe class GettingTooAttached : Tweak<GettingTooAttachedConfiguration>
     private void CheckForErrors(ref SeString message, ref bool isHandled)
     {
         var msg = message.ExtractText();
-        if (new[] { 7701, 7707 }.Any(x => msg == FindRow<LogMessage>(y => y.RowId == x)?.Text.ExtractText()))
+        if (new[] { 7701, 7707 }.Any(x => msg == FindRow<LogMessage>(y => y?.RowId == x)?.Text.ExtractText()))
         {
             ModuleMessage("Error while melding. Aborting Tasks.");
             CancelLoop();
@@ -189,16 +141,16 @@ public unsafe class GettingTooAttached : Tweak<GettingTooAttachedConfiguration>
     public void ConfirmMateriaDialog(AddonEvent type, AddonArgs args)
     {
         if (!active) return;
-        var addon = (AtkUnitBase*)args.Addon;
-        if (addon->AtkValues[50].Type != 0)
+        var addon = new AddonMaster.MateriaAttachDialog((AtkUnitBase*)args.Addon);
+        if (addon.Base->AtkValues[48].Type != 0)
         {
             CancelLoop();
             ModuleMessage("Unable to continue. This gear requires overmelding.");
             return;
         }
 
-        TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.MeldingMateria]);
-        TaskManager.Enqueue(() => Callback.Fire(addon, true, 0, 0, 0));
+        TaskManager.Insert(() => Svc.Condition[ConditionFlag.MeldingMateria]);
+        TaskManager.Insert(addon.Meld);
     }
 
     public unsafe bool ActivateContextMenu()

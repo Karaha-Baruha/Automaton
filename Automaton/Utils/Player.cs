@@ -37,6 +37,7 @@ public unsafe static class Player
     public static string CurrentWorld => Svc.ClientState.LocalPlayer?.CurrentWorld.GameData.Name.ToString();
     public static string HomeDataCenter => GetRow<World>(Svc.ClientState.LocalPlayer.HomeWorld.Id).DataCenter.Value.Name.ToString();
     public static string CurrentDataCenter => GetRow<World>(Svc.ClientState.LocalPlayer.CurrentWorld.Id).DataCenter.Value.Name.ToString();
+
     public static Character* Character => (Character*)Svc.ClientState.LocalPlayer.Address;
     public static BattleChara* BattleChara => (BattleChara*)Svc.ClientState.LocalPlayer.Address;
     public static CSGameObject* GameObject => (CSGameObject*)Svc.ClientState.LocalPlayer.Address;
@@ -51,6 +52,9 @@ public unsafe static class Player
     public static DGameObject Target { get => Svc.Targets.Target; set => Svc.Targets.Target = value; }
     public static bool IsTargetLocked => *(byte*)((nint)TargetSystem.Instance() + 309) == 1;
     public static bool IsCasting => Object.IsCasting;
+
+    public static bool IsLevelSynced => PlayerState.Instance()->IsLevelSynced == 1;
+    public static short SyncedLevel => PlayerState.Instance()->SyncedLevel;
 
     public static Job Job => GetJob(Svc.ClientState.LocalPlayer);
     public static ECommons.ExcelServices.GrandCompany GrandCompany => (ECommons.ExcelServices.GrandCompany)PlayerState.Instance()->GrandCompany;
@@ -79,6 +83,8 @@ public unsafe static class Player
     private static int EquipAttemptLoops = 0;
     public static void Equip(uint itemID)
     {
+        if (Inventory.HasItemEquipped(itemID)) return;
+
         var pos = Inventory.GetItemLocationInInventory(itemID, Inventory.Equippable);
         if (pos == null)
         {
