@@ -18,14 +18,12 @@ public class AutoMerge : Tweak
 
     public override void Enable()
     {
-        base.Enable();
         P.AddonObserver.AddonOpen += OnSetup;
         Sheet = GetSheet<Item>().ToDictionary(x => x.RowId, x => x);
     }
 
     public override void Disable()
     {
-        base.Disable();
         P.AddonObserver.AddonOpen -= OnSetup;
     }
 

@@ -26,10 +26,7 @@ internal static class YesAlready
     }
 
     internal static bool IsEnabled()
-    {
-        return DalamudReflector.TryGetDalamudPlugin("Yes Already", out var pl, false, true)
-&& pl.GetStaticFoP("YesAlready.Service", "Configuration").GetFoP<bool>("Enabled");
-    }
+        => DalamudReflector.TryGetDalamudPlugin("Yes Already", out var pl, false, true) && pl.GetStaticFoP("YesAlready.Service", "Configuration").GetFoP<bool>("Enabled");
 
     internal static bool? WaitForYesAlreadyDisabledTask() => !IsEnabled();
 

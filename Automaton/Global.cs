@@ -1,6 +1,6 @@
 global using Automaton.FeaturesSetup;
 global using Automaton.FeaturesSetup.Attributes;
-global using Automaton.Utils;
+global using Automaton.Utilities;
 global using Dalamud.Game.Addon.Lifecycle;
 global using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 global using Dalamud.Game.ClientState.Conditions;
@@ -13,7 +13,8 @@ global using System.Collections.Generic;
 global using System.Linq;
 global using System.Numerics;
 global using static Automaton.Automaton;
-global using static Automaton.Utils.Excel;
+global using static Automaton.Utilities.Excel;
+global using static Automaton.Utilities.Extensions;
 global using static ECommons.GenericHelpers;
 global using AtkValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 global using CSGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;

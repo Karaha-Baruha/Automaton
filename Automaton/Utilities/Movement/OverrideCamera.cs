@@ -3,7 +3,7 @@ using ECommons.EzHookManager;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using System.Runtime.InteropServices;
 
-namespace Automaton.Utils.Movement;
+namespace Automaton.Utilities.Movement;
 
 [StructLayout(LayoutKind.Explicit, Size = 0x2B0)]
 public unsafe struct CameraEx

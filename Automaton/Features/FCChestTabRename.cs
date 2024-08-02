@@ -31,14 +31,14 @@ internal class FCChestTabRename : Tweak<FcChestTabRenameConfiguration>
     {
         var addon = (AtkUnitBase*)args.Addon;
         if (Config.TabOne != string.Empty)
-            Misc.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 10, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabOne);
+            Utils.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 10, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabOne);
         if (Config.TabTwo != string.Empty)
-            Misc.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 11, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabTwo);
+            Utils.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 11, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabTwo);
         if (Config.TabThree != string.Empty)
-            Misc.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 12, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabThree);
+            Utils.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 12, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabThree);
         if (Config.TabFour != string.Empty)
-            Misc.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 13, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabFour);
+            Utils.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 13, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabFour);
         if (Config.TabFive != string.Empty)
-            Misc.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 14, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabFive);
+            Utils.GetNodeByIDChain(addon->GetRootNode(), 1, 9, 14, 9)->GetAsAtkTextNode()->NodeText.SetString(Config.TabFive);
     }
 }

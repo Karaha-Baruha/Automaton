@@ -1,4 +1,4 @@
-using Automaton.Utils.Movement;
+using Automaton.Utilities.Movement;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -11,7 +11,7 @@ namespace Automaton.Features;
 
 public class AutoFollowConfiguration
 {
-    [EnumConfig] public Misc.MovementType MovementType;
+    [EnumConfig] public Utilities.Utils.MovementType MovementType;
 
     [IntConfig(DefaultValue = 3)] public int DistanceToKeep = 3;
     [IntConfig] public int DisableIfFurtherThan;
@@ -57,14 +57,12 @@ public unsafe class AutoFollow : Tweak<AutoFollowConfiguration>
     {
         Svc.Framework.Update += Follow;
         Svc.Chat.ChatMessage += OnChatMessage;
-        base.Enable();
     }
 
     public override void Disable()
     {
         Svc.Framework.Update -= Follow;
         Svc.Chat.ChatMessage -= OnChatMessage;
-        base.Disable();
     }
 
     private void SetMaster()

@@ -149,8 +149,7 @@ public unsafe class GettingTooAttached : Tweak<GettingTooAttachedConfiguration>
             return;
         }
 
-        TaskManager.Insert(() => Svc.Condition[ConditionFlag.MeldingMateria]);
-        TaskManager.Insert(addon.Meld);
+        TaskManager.InsertMulti([new(() => Svc.Condition[ConditionFlag.MeldingMateria]), new(addon.Meld)]);
     }
 
     public unsafe bool ActivateContextMenu()

@@ -3,7 +3,7 @@ using FFXIVClientStructs.STD;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public static class Structs
 {

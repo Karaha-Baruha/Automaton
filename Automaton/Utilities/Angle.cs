@@ -1,4 +1,4 @@
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public struct Angle(float radians = 0)
 {

@@ -2,7 +2,7 @@
 using FFXIVClientStructs.Interop;
 using Lumina.Excel.GeneratedSheets;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public class Inventory
 {
     public static readonly InventoryType[] PlayerInventory =

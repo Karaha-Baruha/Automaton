@@ -3,7 +3,7 @@ using ECommons.EzHookManager;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using System.Runtime.InteropServices;
 
-namespace Automaton.Utils.Movement;
+namespace Automaton.Utilities.Movement;
 
 [StructLayout(LayoutKind.Explicit, Size = 0x18)]
 public unsafe struct PlayerMoveControllerFlyInput

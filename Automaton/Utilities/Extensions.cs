@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public static partial class Extensions
 {
     public static uint Reverse(this uint value)

@@ -1,6 +1,6 @@
 using FFXIVClientStructs.FFXIV.Client.UI;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public static class Colors
 {

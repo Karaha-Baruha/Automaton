@@ -7,7 +7,6 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using ImGuiNET;
-using static Automaton.Utils.Extensions;
 
 namespace Automaton.Features;
 
@@ -52,8 +51,8 @@ public class DebugTools : Tweak<DebugToolsConfiguration>
     private unsafe void OnSetup(AddonEvent type, AddonArgs args)
     {
         if (!Config.AutoVoidIslandRest) return;
-        if (Misc.AgentData->RestCycles.ToHex() != 8321u)
-            Misc.SetRestCycles(8321u);
+        if (Utils.AgentData->RestCycles.ToHex() != 8321u)
+            Utils.SetRestCycles(8321u);
     }
 
     [CommandHandler("/tpclick", "Teleport to your mouse location on click while CTRL is held.", nameof(Config.EnableTPClick))]
@@ -99,7 +98,7 @@ public class DebugTools : Tweak<DebugToolsConfiguration>
         if (!Player.Available || Player.Occupied) return;
         if (Config.EnableTPClick && tpActive)
         {
-            if (!Framework.Instance()->WindowInactive && IsKeyPressed([LimitedKeys.LeftControlKey, LimitedKeys.RightControlKey]) && Misc.IsClickingInGameWorld())
+            if (!Framework.Instance()->WindowInactive && IsKeyPressed([LimitedKeys.LeftControlKey, LimitedKeys.RightControlKey]) && Utils.IsClickingInGameWorld())
             {
                 var pos = ImGui.GetMousePos();
                 if (Svc.GameGui.ScreenToWorld(pos, out var res))
@@ -130,25 +129,25 @@ public class DebugTools : Tweak<DebugToolsConfiguration>
             }
             if (Svc.KeyState.GetRawValue(VirtualKey.W) != 0 || IsKeyPressed(LimitedKeys.W))
             {
-                var newPoint = Misc.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(0, 0, Config.NoClipSpeed));
+                var newPoint = Utils.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(0, 0, Config.NoClipSpeed));
                 Svc.KeyState.SetRawValue(VirtualKey.W, 0);
                 Player.Position = newPoint;
             }
             if (Svc.KeyState.GetRawValue(VirtualKey.S) != 0 || IsKeyPressed(LimitedKeys.S))
             {
-                var newPoint = Misc.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(0, 0, -Config.NoClipSpeed));
+                var newPoint = Utils.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(0, 0, -Config.NoClipSpeed));
                 Svc.KeyState.SetRawValue(VirtualKey.S, 0);
                 Player.Position = newPoint;
             }
             if (Svc.KeyState.GetRawValue(VirtualKey.A) != 0 || IsKeyPressed(LimitedKeys.A))
             {
-                var newPoint = Misc.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(Config.NoClipSpeed, 0, 0));
+                var newPoint = Utils.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(Config.NoClipSpeed, 0, 0));
                 Svc.KeyState.SetRawValue(VirtualKey.A, 0);
                 Player.Position = newPoint;
             }
             if (Svc.KeyState.GetRawValue(VirtualKey.D) != 0 || IsKeyPressed(LimitedKeys.D))
             {
-                var newPoint = Misc.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(-Config.NoClipSpeed, 0, 0));
+                var newPoint = Utils.RotatePoint(Player.Object.Position.X, Player.Object.Position.Z, MathF.PI - Player.CameraEx->DirH, Player.Object.Position + new Vector3(-Config.NoClipSpeed, 0, 0));
                 Svc.KeyState.SetRawValue(VirtualKey.D, 0);
                 Player.Position = newPoint;
             }
@@ -206,62 +205,27 @@ public class DebugTools : Tweak<DebugToolsConfiguration>
             Player.Position = v;
     }
 
-    private delegate long kbprocDelegate(long gameobj, float rot, float length, long a4, char a5, int a6);
-    [EzHook("E8 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? FF C6", false)]
-    private readonly EzHook<kbprocDelegate>? KBProcHook;
     private bool noKb;
-
     [CommandHandler("/tkb", "Toggle knockback immunity", nameof(Config.EnableNoClip))]
     private void OnToggleKnockback(string command, string arguments)
     {
         noKb ^= true;
         if (noKb)
-            KBProcHook?.Enable();
+            P.Memory.KBProcHook?.Enable();
         else
-            KBProcHook?.Disable();
+            P.Memory.KBProcHook?.Disable();
         Svc.Toasts.ShowNormal($"Knockback Immunity {(noKb ? "Enabled" : "Disabled")}");
     }
 
-    private long KBProcDetour(long gameobj, float rot, float length, long a4, char a5, int a6)
-    {
-        if (Config.DisableKnockback) length = 0f;
-        return KBProcHook!.Original(gameobj, rot, length, a4, a5, a6);
-    }
-
-    private unsafe delegate nint NoBewitchActionDelegate(CSGameObject* gameObj, float x, float y, float z, int a5, nint a6);
-    [EzHook("40 53 48 83 EC 50 45 33 C0", false)]
-    private readonly EzHook<NoBewitchActionDelegate>? BewitchHook;
     private bool noBewitch;
-
     [CommandHandler("/tbw", "Toggle bewitching immunity", nameof(Config.DisableBewitched))]
     private void OnToggleBewitch(string command, string arguments)
     {
         noBewitch ^= true;
         if (noBewitch)
-            BewitchHook?.Enable();
+            P.Memory.BewitchHook?.Enable();
         else
-            BewitchHook?.Disable();
+            P.Memory.BewitchHook?.Disable();
         Svc.Toasts.ShowNormal($"Bewitch Immunity {(noBewitch ? "Enabled" : "Disabled")}");
-    }
-
-    private unsafe nint BewitchDetour(CSGameObject* gameObj, float x, float y, float z, int a5, nint a6)
-    {
-        try
-        {
-            if (gameObj->IsCharacter() && Config.DisableBewitched)
-            {
-                var chara = gameObj->Character();
-                if (chara->GetStatusManager()->HasStatus(3023) || chara->GetStatusManager()->HasStatus(3024))
-                {
-                    return nint.Zero;
-                }
-            }
-            return BewitchHook!.Original(gameObj, x, y, z, a5, a6);
-        }
-        catch (Exception ex)
-        {
-            Svc.Log.Error(ex.Message, ex);
-            return BewitchHook!.Original(gameObj, x, y, z, a5, a6);
-        }
     }
 }

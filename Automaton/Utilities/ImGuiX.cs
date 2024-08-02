@@ -10,7 +10,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using ImGuiNET;
 using System.Threading.Tasks;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public static class ImGuiX
 {
     public static void TextUnformattedDisabled(string text)
@@ -108,10 +108,10 @@ public static class ImGuiX
             ImGui.Text(icon.ToIconString());
     }
 
-    public static void Icon(ushort iconID, int size) => Icon(Misc.GetIcon(iconID), size.Vec2());
-    public static void Icon(ushort iconID, Vector2 size) => Icon(Misc.GetIcon(iconID), size);
-    public static void Icon(uint iconID, int size) => Icon(Misc.GetIcon(iconID), size.Vec2());
-    public static void Icon(uint iconID, Vector2 size) => Icon(Misc.GetIcon(iconID), size);
+    public static void Icon(ushort iconID, int size) => Icon(Utils.GetIcon(iconID), size.Vec2());
+    public static void Icon(ushort iconID, Vector2 size) => Icon(Utils.GetIcon(iconID), size);
+    public static void Icon(uint iconID, int size) => Icon(Utils.GetIcon(iconID), size.Vec2());
+    public static void Icon(uint iconID, Vector2 size) => Icon(Utils.GetIcon(iconID), size);
     public static void Icon(IDalamudTextureWrap? icon, Vector2 size)
     {
         if (icon != null)

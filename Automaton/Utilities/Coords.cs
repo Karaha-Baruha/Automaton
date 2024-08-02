@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.GeneratedSheets;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public static class Coords
 {

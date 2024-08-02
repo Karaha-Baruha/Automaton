@@ -1,7 +1,7 @@
 ﻿using ECommons.Reflection;
 using System.Reflection;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public class DalamudReflection
 {
     public static bool HasRepo(string repository)

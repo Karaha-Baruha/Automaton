@@ -1,4 +1,4 @@
-using Automaton.Utils.Movement;
+using Automaton.Utilities.Movement;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using ImGuiNET;
 
@@ -6,7 +6,7 @@ namespace Automaton.Features;
 
 public class ClickToMoveConfiguration
 {
-    [EnumConfig] public Misc.MovementType MovementType;
+    [EnumConfig] public Utilities.Utils.MovementType MovementType;
 }
 
 [Tweak]
@@ -34,7 +34,7 @@ public unsafe class ClickToMove : Tweak<ClickToMoveConfiguration>
         if (!Player.Available || Player.Occupied) return;
         if (Player.Object.IsNear(destination, 0.0025f)) movement.Enabled = false;
 
-        if (IsKeyPressed(ECommons.Interop.LimitedKeys.LeftMouseButton) && Misc.IsClickingInGameWorld())
+        if (IsKeyPressed(ECommons.Interop.LimitedKeys.LeftMouseButton) && Utils.IsClickingInGameWorld())
         {
             if (!isPressed)
             {
@@ -49,7 +49,7 @@ public unsafe class ClickToMove : Tweak<ClickToMoveConfiguration>
                 if (!Framework.Instance()->WindowInactive)
                 {
                     Svc.GameGui.ScreenToWorld(ImGui.GetIO().MousePos, out var pos, 100000f);
-                    if (Config.MovementType == Misc.MovementType.Pathfind)
+                    if (Config.MovementType == Utils.MovementType.Pathfind)
                     {
                         if (!P.Navmesh.IsRunning())
                             P.Navmesh.PathfindAndMoveTo(pos, false);

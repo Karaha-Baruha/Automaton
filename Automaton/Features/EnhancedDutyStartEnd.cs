@@ -27,20 +27,18 @@ public class EnhancedDutyStartEnd : Tweak<EnhancedDutyStartEndConfiguration>
     public override string Name => "Enhanced Duty Start/End";
     public override string Description => "Automatically execute certain actions when the duty starts or ends.";
 
-    private delegate void AbandonDuty(bool a1);
-    private AbandonDuty _abandonDuty = null!;
-
     public override void Enable()
     {
         Svc.DutyState.DutyStarted += OnDutyStart;
         Svc.DutyState.DutyCompleted += OnDutyComplete;
-        _abandonDuty = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Svc.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B 43 28 41 B2 01"));
+        Svc.ClientState.TerritoryChanged += OnTerritoryChanged;
     }
 
     public override void Disable()
     {
         Svc.DutyState.DutyStarted -= OnDutyStart;
         Svc.DutyState.DutyCompleted -= OnDutyComplete;
+        Svc.ClientState.TerritoryChanged -= OnTerritoryChanged;
     }
 
     private string _name = string.Empty;
@@ -97,11 +95,13 @@ public class EnhancedDutyStartEnd : Tweak<EnhancedDutyStartEndConfiguration>
         var allPlayersInParty = Config.Players.Count > 0 && Config.Players.IsSubsetOf(Svc.Party.Select(p => p.Name.TextValue));
         var noPlayersInParty = Config.Players.Count > 0 && !Config.Players.Any(p => Svc.Party.Any(pm => pm.Name.TextValue == p));
         if (Config.CheckForAll && !allPlayersInParty || Config.CheckForAny && noPlayersInParty)
-            _abandonDuty(false);
+            P.Memory.AbandonDuty(false);
     }
 
+    private static uint _territoryID;
     private void OnDutyComplete(object? sender, ushort e)
     {
+        _territoryID = Player.Territory;
         if (!Config.EndMsg.IsNullOrEmpty())
         {
             if (Config.EndMsg.StartsWith('/'))
@@ -113,7 +113,14 @@ public class EnhancedDutyStartEnd : Tweak<EnhancedDutyStartEndConfiguration>
         if (Config.AutoLeaveOnEnd)
         {
             TaskManager.EnqueueDelay(Config.TimeToWait.Ms());
-            TaskManager.Enqueue(() => _abandonDuty(false));
+            TaskManager.Enqueue(() => P.Memory.AbandonDuty(false));
         }
+    }
+
+    private void OnTerritoryChanged(ushort id)
+    {
+        // cancel queue if we changed zones via other means to prevent autoleave from triggering in the next duty
+        if (id != _territoryID && TaskManager.Tasks.Count > 0)
+            TaskManager.Abort();
     }
 }

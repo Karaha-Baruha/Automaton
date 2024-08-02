@@ -11,8 +11,8 @@ using FFXIVClientStructs.Interop;
 using ImGuiNET;
 using System.Reflection;
 
-namespace Automaton.Utils;
-public static class Misc
+namespace Automaton.Utilities;
+public static class Utils
 {
     public enum MovementType
     {

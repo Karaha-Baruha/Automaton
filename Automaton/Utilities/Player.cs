@@ -1,4 +1,4 @@
-﻿using Automaton.Utils.Movement;
+﻿using Automaton.Utilities.Movement;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Statuses;
 using ECommons.Automation;
@@ -13,10 +13,10 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using PlayerController = Automaton.Utils.Structs.PlayerController;
+using PlayerController = Automaton.Utilities.Structs.PlayerController;
 #nullable disable
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public unsafe static class Player
 {
@@ -52,6 +52,7 @@ public unsafe static class Player
     public static DGameObject Target { get => Svc.Targets.Target; set => Svc.Targets.Target = value; }
     public static bool IsTargetLocked => *(byte*)((nint)TargetSystem.Instance() + 309) == 1;
     public static bool IsCasting => Object.IsCasting;
+    public static float AnimationLock => ActionManager.Instance()->AnimationLock;
 
     public static bool IsLevelSynced => PlayerState.Instance()->IsLevelSynced == 1;
     public static short SyncedLevel => PlayerState.Instance()->SyncedLevel;

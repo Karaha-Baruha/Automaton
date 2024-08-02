@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public unsafe class Debug
 {
     // this persists through LocalPlayer going null unlike setting via PMC

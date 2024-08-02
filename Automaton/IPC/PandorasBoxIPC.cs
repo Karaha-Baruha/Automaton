@@ -7,7 +7,7 @@ internal class PandorasBoxIPC
 {
     public static string Name = "PandorasBox";
     public PandorasBoxIPC() => EzIPC.Init(this, Name);
-    public static bool IsEnabled => Misc.HasPlugin(Name);
+    public static bool IsEnabled => Utils.HasPlugin(Name);
 
     [EzIPC] public readonly Func<string, bool?> GetFeatureEnabled;
     [EzIPC] public readonly Func<string, string, bool?> GetConfigEnabled;

@@ -1,7 +1,7 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System.Runtime.InteropServices;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public static class Objects
 {

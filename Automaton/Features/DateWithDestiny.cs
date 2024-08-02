@@ -1,3 +1,4 @@
+using Automaton.IPC;
 using Automaton.UI;
 using Dalamud.Game.ClientState.Fates;
 using Dalamud.Game.ClientState.Objects.Enums;
@@ -41,11 +42,11 @@ public class DateWithDestinyConfiguration
     [FloatConfig(DefaultValue = 90)] public float MaxProgress = 90;
 }
 
-[Tweak]
+[Tweak, Requirement(NavmeshIPC.Name, NavmeshIPC.Repo)]
 internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
 {
     public override string Name => "Date with Destiny";
-    public override string Description => $"It's a FATE bot. Requires vnavmesh and whatever you want for combat.";
+    public override string Description => $"It's a FATE bot. Requires whatever you want for combat.";
 
     public bool active = false;
     private static Vector3 TargetPos;
@@ -182,12 +183,12 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
 
     public override void Disable()
     {
-        Misc.RemoveWindow<FateTrackerUI>();
+        Utils.RemoveWindow<FateTrackerUI>();
         Svc.Framework.Update -= OnUpdate;
     }
 
     [CommandHandler("/vfate", "Opens the FATE tracker")]
-    private void OnCommand(string command, string arguments) => Misc.GetWindow<FateTrackerUI>()!.IsOpen ^= true;
+    private void OnCommand(string command, string arguments) => Utils.GetWindow<FateTrackerUI>()!.IsOpen ^= true;
 
     private unsafe void OnUpdate(IFramework framework)
     {

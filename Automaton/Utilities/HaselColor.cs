@@ -1,7 +1,7 @@
 using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public struct HaselColor
 {

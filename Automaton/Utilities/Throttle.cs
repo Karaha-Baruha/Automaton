@@ -1,4 +1,4 @@
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 class Throttle
 {

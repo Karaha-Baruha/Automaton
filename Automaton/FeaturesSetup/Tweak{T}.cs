@@ -124,13 +124,6 @@ public abstract class Tweak<T> : Tweak
         base.OnConfigChangeInternal(fieldName);
     }
 
-    internal override void OnLanguageChangeInternal()
-    {
-        DisableCommands();
-        base.OnLanguageChangeInternal();
-        EnableCommands();
-    }
-
     private void EnableCommand(string command, string helpMessage, MethodInfo methodInfo)
     {
         var handler = methodInfo.CreateDelegate<IReadOnlyCommandInfo.HandlerDelegate>(this);

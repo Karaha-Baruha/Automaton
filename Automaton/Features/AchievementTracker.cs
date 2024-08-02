@@ -1,6 +1,5 @@
 using Automaton.UI;
 using Dalamud.Interface.Components;
-using ECommons.EzHookManager;
 using ECommons.ImGuiMethods;
 using ECommons.SimpleGui;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -21,10 +20,6 @@ public unsafe class AchievementTracker : Tweak<AchievementTrackerConfiguration>
 {
     public override string Name => "Achievement Tracker";
     public override string Description => $"Adds an achievement tracker.";
-
-    public delegate void ReceiveAchievementProgressDelegate(Achievement* achievement, uint id, uint current, uint max);
-    [EzHook("C7 81 ?? ?? ?? ?? ?? ?? ?? ?? 89 91 ?? ?? ?? ?? 44 89 81")]
-    public EzHook<ReceiveAchievementProgressDelegate> ReceiveAchievementProgressHook = null!;
 
     public override void DrawConfig()
     {
@@ -58,40 +53,31 @@ public unsafe class AchievementTracker : Tweak<AchievementTrackerConfiguration>
 
     public override void Enable()
     {
-        EzSignatureHelper.Initialize(this);
-        ReceiveAchievementProgressHook.Enable();
+        P.Memory.ReceiveAchievementProgressHook.Enable();
+        Events.AchievementProgressUpdate += OnAchievementProgressUpdate;
         EzConfigGui.WindowSystem.AddWindow(new AchievementTrackerUI(this));
     }
 
     public override void Disable()
     {
-        ReceiveAchievementProgressHook.Disable();
-        Misc.RemoveWindow<AchievementTrackerUI>();
+        P.Memory.ReceiveAchievementProgressHook.Disable();
+        Events.AchievementProgressUpdate -= OnAchievementProgressUpdate;
+        Utils.RemoveWindow<AchievementTrackerUI>();
     }
 
     [CommandHandler("/atracker", "Toggle the Achievement Tracker window")]
-    private void OnCommand(string command, string arguments) => Misc.GetWindow<AchievementTrackerUI>()!.IsOpen ^= true;
+    private void OnCommand(string command, string arguments) => Utils.GetWindow<AchievementTrackerUI>()!.IsOpen ^= true;
 
-    public void ReceiveAchievementProgressDetour(Achievement* achievement, uint id, uint current, uint max)
+    private void OnAchievementProgressUpdate(uint id, uint current, uint max)
     {
-        try
+        foreach (var achv in Config.Achievements)
         {
-            Svc.Log.Debug($"{nameof(ReceiveAchievementProgressDetour)}: [{id}] {current} / {max}");
-            foreach (var achv in Config.Achievements)
+            if (achv.ID == id)
             {
-                if (achv.ID == id)
-                {
-                    achv.CurrentProgress = current;
-                    achv.MaxProgress = max;
-                }
+                achv.CurrentProgress = current;
+                achv.MaxProgress = max;
             }
         }
-        catch (Exception e)
-        {
-            Svc.Log.Error("Error receiving achievement progress: {e}", e);
-        }
-
-        ReceiveAchievementProgressHook.Original(achievement, id, current, max);
     }
 
     public void RequestUpdate(uint id = 0)

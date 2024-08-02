@@ -118,7 +118,6 @@ public class HuntRelayHelper : Tweak<HuntRelayHelperConfiguration>
                 if (ImGui.Checkbox($"##{c.Value.Channel}{nameof(c.Value.IsLocal)}", ref tmpL.IsLocal))
                     Config.Channels[c.Index] = (Config.Channels[c.Index].Channel, Config.Channels[c.Index].Command, tmpL.IsLocal, Config.Channels[c.Index].Enabled);
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip("Mark channel as \"local\"");
-                //ImGuiComponents.HelpMarker("Set this channel to be considered a \"local\" channel.");
             }
         }
 

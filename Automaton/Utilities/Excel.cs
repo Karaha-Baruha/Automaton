@@ -4,7 +4,7 @@ using ImGuiNET;
 using Lumina.Excel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 public static class Excel
 {
     public static ExcelSheet<T> GetSheet<T>(ClientLanguage? language = null) where T : ExcelRow

@@ -1,4 +1,5 @@
-﻿using Dalamud.Interface;
+﻿using Automaton.IPC;
+using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using ECommons.ImGuiMethods;
 using ImGuiNET;
@@ -11,7 +12,7 @@ public class AddresBookConfiguration
     public List<(string Name, uint Territory, Vector3 Position)> Locations = [];
 }
 
-[Tweak]
+[Tweak, Requirement(NavmeshIPC.Name, NavmeshIPC.Repo)]
 public class AddressBook : Tweak<AddresBookConfiguration>
 {
     public override string Name => "Address Book";

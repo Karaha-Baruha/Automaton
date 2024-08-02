@@ -1,6 +1,7 @@
 using Automaton.Configuration;
 using Automaton.IPC;
 using Automaton.UI;
+using AutoRetainerAPI;
 using Dalamud.Plugin;
 using ECommons;
 using ECommons.Automation.LegacyTaskManager;
@@ -26,6 +27,11 @@ public class Automaton : IDalamudPlugin
     internal NavmeshIPC Navmesh;
     internal NativeController NativeController;
     internal AddonObserver AddonObserver;
+    internal AutoRetainerApi AutoRetainerAPI;
+    internal LifestreamIPC Lifestream;
+    internal DeliverooIPC Deliveroo;
+    internal AutoRetainerIPC AutoRetainer;
+    internal Memory Memory;
 
     public Automaton(IDalamudPluginInterface pluginInterface)
     {
@@ -51,10 +57,14 @@ public class Automaton : IDalamudPlugin
         HaselWindow.SetWindowProperties();
         EzConfigGui.WindowSystem.AddWindow(new DebugWindow());
         NativeController = new NativeController(Svc.PluginInterface);
-
+        Memory = new();
         AddonObserver = new();
         TaskManager = new();
         Navmesh = new();
+        AutoRetainerAPI = new();
+        Lifestream = new();
+        Deliveroo = new();
+        AutoRetainer = new();
 
         Svc.Framework.RunOnFrameworkThread(InitializeTweaks);
         C.EnabledTweaks.CollectionChanged += OnChange;

@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.Interop;
 
-namespace Automaton.Utils;
+namespace Automaton.Utilities;
 
 public unsafe class AddonObserver : IDisposable
 {

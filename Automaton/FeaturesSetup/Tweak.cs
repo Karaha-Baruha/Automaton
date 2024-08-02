@@ -16,6 +16,7 @@ public abstract partial class Tweak : ITweak
         CachedType = GetType();
         InternalName = CachedType.Name;
         IncompatibilityWarnings = CachedType.GetCustomAttributes<IncompatibilityWarningAttribute>().ToArray();
+        Requirements = CachedType.GetCustomAttributes<RequirementAttribute>().ToArray();
         Outdated = CachedType.GetCustomAttribute<TweakAttribute>()?.Outdated ?? false;
         Disabled = CachedType.GetCustomAttribute<TweakAttribute>()?.Disabled ?? false;
         IsDebug = CachedType.GetCustomAttribute<TweakAttribute>()?.Debug ?? false;
@@ -62,6 +63,7 @@ public abstract partial class Tweak : ITweak
     public Type CachedType { get; init; }
     public string InternalName { get; init; }
     public IncompatibilityWarningAttribute[] IncompatibilityWarnings { get; init; }
+    public RequirementAttribute[] Requirements { get; init; }
 
     public abstract string Name { get; }
     public abstract string Description { get; }
@@ -82,15 +84,6 @@ public abstract partial class Tweak : ITweak
     public virtual void Dispose() { }
     public virtual void DrawConfig() { }
     public virtual void OnConfigChange(string fieldName) { }
-    public virtual void OnConfigWindowClose() { }
-    public virtual void OnLanguageChange() { }
-    public virtual void OnInventoryUpdate() { }
-    public virtual void OnFrameworkUpdate() { }
-    public virtual void OnLogin() { }
-    public virtual void OnLogout() { }
-    public virtual void OnTerritoryChanged(ushort id) { }
-    public virtual void OnAddonOpen(string addonName) { }
-    public virtual void OnAddonClose(string addonName) { }
 }
 
 public abstract partial class Tweak // Internal
@@ -122,6 +115,11 @@ public abstract partial class Tweak // Internal
     internal virtual void EnableInternal()
     {
         if (!Ready || Outdated || Disabled) return;
+        if (Requirements.Any(r => !r.IsLoaded))
+        {
+            ModuleMessage("Feature not enabled due to missing dependencies. Please install them then re-enable this feature.");
+            return;
+        }
 
         try
         {
@@ -228,118 +226,6 @@ public abstract partial class Tweak // Internal
 
         Ready = false;
         Disposed = true;
-    }
-
-    internal virtual void OnFrameworkUpdateInternal()
-    {
-        try
-        {
-            OnFrameworkUpdate();
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnFrameworkUpdate");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnLoginInternal()
-    {
-        try
-        {
-            OnLogin();
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnLogin");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnLogoutInternal()
-    {
-        try
-        {
-            OnLogout();
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnLogout");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnTerritoryChangedInternal(ushort id)
-    {
-        try
-        {
-            OnTerritoryChanged(id);
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnTerritoryChanged");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnAddonOpenInternal(string addonName)
-    {
-        try
-        {
-            OnAddonOpen(addonName);
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnAddonOpen");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnAddonCloseInternal(string addonName)
-    {
-        try
-        {
-            OnAddonClose(addonName);
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnAddonOpen");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnInventoryUpdateInternal()
-    {
-        try
-        {
-            OnInventoryUpdate();
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnInventoryUpdate");
-            LastInternalException = ex;
-            return;
-        }
-    }
-
-    internal virtual void OnLanguageChangeInternal()
-    {
-        try
-        {
-            OnLanguageChange();
-        }
-        catch (Exception ex)
-        {
-            Error(ex, "Unexpected error during OnLanguageChange");
-            LastInternalException = ex;
-            return;
-        }
     }
 
     internal virtual void OnConfigChangeInternal(string fieldName)

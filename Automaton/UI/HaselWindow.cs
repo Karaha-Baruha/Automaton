@@ -153,7 +153,7 @@ public partial class HaselWindow
                 ImGui.Image(logo.ImGuiHandle, scaledLogoSize);
             }
 
-            var welcomeStr = "hi! new expac, new version, new tweaks.\nThis is a warning that Automaton is in its early stages for Dawntrail still.";
+            var welcomeStr = "still working on updating a few things, hope you're enjoying the new toys";
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetColumnWidth() * 0.5f - ImGui.CalcTextSize(welcomeStr).X * 0.5f);
             ImGuiX.FlashText(welcomeStr, Colors.Gold, ImGui.GetStyle().Colors[(int)ImGuiCol.WindowBg], 2);
 
@@ -195,6 +195,21 @@ public partial class HaselWindow
         {
             ImGuiX.DrawPaddedSeparator();
             ImGuiHelpers.SafeTextColoredWrapped(Colors.Grey2, tweak.Description);
+        }
+
+        if (tweak.Requirements.Any(entry => !entry.IsLoaded))
+        {
+            ImGuiX.DrawSection("Required Dependencies");
+            ImGuiX.Icon(60074, 24);
+            ImGui.SameLine();
+            ImGuiHelpers.SafeTextColoredWrapped(Colors.Grey2, $"Missing {tweak.Requirements.Count(entry => !entry.IsLoaded)} of the required plugins for this feature to work:");
+            foreach (var entry in tweak.Requirements.Where(entry => !entry.IsLoaded))
+            {
+                ImGuiHelpers.SafeTextColoredWrapped(Colors.Grey2, $"{entry.InternalName}:");
+                ImGui.SameLine();
+                ImGuiHelpers.ClickToCopyText(entry.Repo);
+                if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
         }
 
         if (tweak.IncompatibilityWarnings.Any(entry => entry.IsLoaded))

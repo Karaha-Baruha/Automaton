@@ -28,8 +28,6 @@ public class MarketAdjusterConfiguration
 
     [IntConfig(DefaultValue = 0)]
     public int MaxPriceReduction = 0;
-
-    public List<MarketAdjuster.Overrides> Overrides = [];
 }
 
 [Tweak]
@@ -46,17 +44,6 @@ public partial class MarketAdjuster : Tweak<MarketAdjusterConfiguration>
     private static uint CurrentItemSearchItemID;
     private static bool IsCurrentItemHQ;
     private static unsafe RetainerManager.Retainer* CurrentRetainer;
-
-    public class Overrides
-    {
-        public required uint ID;
-        public int min;
-        public int max;
-        public int def;
-
-        public string Name => GetRow<Item>(ID)?.Name.RawString ?? "";
-        public ushort Icon => GetRow<Item>(ID)?.Icon ?? 0;
-    }
 
     public class Listing
     {
@@ -85,24 +72,6 @@ public partial class MarketAdjuster : Tweak<MarketAdjusterConfiguration>
         base.DrawConfig();
         if (ImGui.Button("cancel"))
             TaskManager.Abort();
-
-        ImGuiX.DrawSection("Overrides");
-
-        if (ExcelSheetCombo<Item>("##Search", out var item, _ => string.Empty, x => x.Name, x => !x.IsUnique && !x.IsUntradable))
-        {
-            Config.Overrides.Add(new Overrides() { ID = item.RowId });
-        }
-
-        foreach (var i in Config.Overrides.ToList())
-        {
-            ImGuiX.Icon(i.Icon, 25);
-            ImGui.TextUnformatted($"[{i.ID}] {i.Name} min:{i.min} max:{i.max} def:{i.def}");
-            ImGui.SameLine();
-            if (ImGuiX.IconButton(FontAwesomeIcon.Trash, $"##Trash{i.ID}"))
-            {
-                Config.Overrides.Remove(i);
-            }
-        }
     }
 
     private void OnRetainerSell(AddonEvent eventType, AddonArgs addonInfo)

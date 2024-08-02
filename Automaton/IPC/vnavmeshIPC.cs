@@ -5,9 +5,10 @@ namespace Automaton.IPC;
 #nullable disable
 public class NavmeshIPC
 {
-    public static string Name = "vnavmesh";
+    public const string Name = "vnavmesh";
+    public const string Repo = "https://puni.sh/api/repository/veyn";
     public NavmeshIPC() => EzIPC.Init(this, Name);
-    public static bool IsEnabled => Misc.HasPlugin(Name);
+    public static bool Installed => Utils.HasPlugin(Name);
 
     [EzIPC("Nav.%m")] public readonly Func<bool> IsReady;
     [EzIPC("Nav.%m")] public readonly Func<float> BuildProgress;
@@ -22,5 +23,5 @@ public class NavmeshIPC
     [EzIPC("Path.%m")] public readonly Func<bool> IsRunning;
 
     [EzIPC("Query.Mesh.%m")] public readonly Func<Vector3, float, float, Vector3?> NearestPoint;
-    [EzIPC("Query.Mesh.%m")] public readonly Func<Vector3, float, bool, Vector3?> PointOnFloor;
+    [EzIPC("Query.Mesh.%m")] public readonly Func<Vector3, bool, float, Vector3?> PointOnFloor;
 }
