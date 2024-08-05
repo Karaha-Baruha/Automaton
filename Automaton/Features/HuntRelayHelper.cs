@@ -324,13 +324,14 @@ public class HuntRelayHelper : Tweak<HuntRelayHelperConfiguration>
         World? partial = null;
         if (Config.AllowPartialWorldMatches)
             foreach (var word in RemoveConflicts(text).Split(' ').Where(t => !ECommons.GenericHelpers.IsNullOrEmpty(t) && t.Length > 2))
-                partial ??= FindRow<World>(x => x!.IsPublic && x.DataCenter.Value!.Name == Player.CurrentDataCenter && x.Name.RawString.Contains(word, StringComparison.OrdinalIgnoreCase));
+                partial ??= FindRow<World>(x => x!.IsPublic && x.DataCenter.Value!.Name == Player.CurrentDataCenter && x.Name.RawString.Contains(RemoveNonAlphaNumeric(word), StringComparison.OrdinalIgnoreCase));
 
         return (partial ?? FindRow<World>(x => x!.IsPublic && RemoveConflicts(text).Contains(x.Name.RawString, StringComparison.OrdinalIgnoreCase)) ?? null, heuristicInstance != 0 ? (uint)heuristicInstance : (uint)mapInstance, (uint)relayType);
     }
 
     // I think this is the only case where an S rank has the name of a world contained within it
     private string RemoveConflicts(string text) => text.Replace("kaiser behemoth", string.Empty, StringComparison.OrdinalIgnoreCase);
+    private string RemoveNonAlphaNumeric(string text) => Regex.Replace(text, @"\W+", "");
 
     private char ReplaceSeIconChar(char c)
     {

@@ -56,6 +56,7 @@ internal class FateTrackerUI : Window
         {
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
+
             if (ImGuiComponents.IconButton($"###Pathfind{fate.FateId}", FontAwesomeIcon.Map))
             {
                 if (!P.Navmesh.IsRunning())
@@ -64,20 +65,34 @@ internal class FateTrackerUI : Window
                     P.Navmesh.Stop();
             }
             if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Pathfind to {fate.Position}");
+
             ImGui.SameLine();
+
             if (ImGuiComponents.IconButton($"###Flag{fate.FateId}", FontAwesomeIcon.Flag))
             {
                 unsafe { AgentMap.Instance()->SetFlagMapMarker(Svc.ClientState.TerritoryType, Svc.ClientState.MapId, fate.Position); }
             }
             if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Set map flag to {fate.Position}");
+
             ImGui.SameLine();
+
+            if (_tweak.Config.ShowFateBonusIndicator && fate.HasExpBonus)
+            {
+                ImGui.Image(Svc.Texture.GetFromGameIcon(new Dalamud.Interface.Textures.GameIconLookup(65001)).GetWrapOrEmpty().ImGuiHandle, new Vector2(ImGuiX.IconUnitHeight()));
+
+                ImGui.SameLine();
+            }
+
             var nameColour = _tweak.FateConditions(fate) ? new Vector4(1, 1, 1, 1) : _tweak.Config.blacklist.Contains(fate.FateId) ? new Vector4(1, 0, 0, 0.5f) : new Vector4(1, 1, 1, 0.5f);
-            ImGuiEx.TextV(nameColour, $"{fate.Name}");
+            ImGuiEx.TextV(nameColour, $"{fate.Name} {(_tweak.Config.ShowFateTimeRemaining && fate.TimeRemaining >= 0 ? TimeSpan.FromSeconds(fate.TimeRemaining) : string.Empty)}");
             if (ImGui.IsItemHovered()) ImGui.SetTooltip($"[{fate.FateId}] {fate.Position} {fate.Progress}%% {fate.TimeRemaining}/{fate.Duration}\nFate {(_tweak.FateConditions(fate) ? "meets" : "doesn't meet")} conditions and {(_tweak.FateConditions(fate) ? "will" : "won't")} be pathed to in auto mode.");
 
             ImGui.TableNextColumn();
+
             ImGuiX.DrawProgressBar(fate.Progress, 100, new Vector4(0.404f, 0.259f, 0.541f, 1));
+
             ImGui.SameLine();
+
             ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - ImGuiX.IconUnitWidth() - ImGui.GetStyle().WindowPadding.X);
             if (ImGuiComponents.IconButton($"###Blacklist{fate.FateId}", FontAwesomeIcon.Ban))
             {

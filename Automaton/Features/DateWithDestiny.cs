@@ -40,6 +40,9 @@ public class DateWithDestinyConfiguration
     [FloatConfig(DefaultValue = 900)] public float MaxDuration = 900;
     [FloatConfig(DefaultValue = 120)] public float MinTimeRemaining = 120;
     [FloatConfig(DefaultValue = 90)] public float MaxProgress = 90;
+
+    [BoolConfig] public bool ShowFateTimeRemaining;
+    [BoolConfig] public bool ShowFateBonusIndicator;
 }
 
 [Tweak, Requirement(NavmeshIPC.Name, NavmeshIPC.Repo)]
@@ -172,6 +175,10 @@ internal class DateWithDestiny : Tweak<DateWithDestinyConfiguration>
         ImGui.DragFloat("Max Progress (%)", ref Config.MaxProgress);
         ImGui.SameLine();
         ImGuiX.ResetButton(ref Config.MaxProgress, 90);
+
+        ImGuiX.DrawSection("Fate Window Options");
+        ImGui.Checkbox("Show Time Remaining", ref Config.ShowFateTimeRemaining);
+        ImGui.Checkbox("Show Bonus Indicator", ref Config.ShowFateBonusIndicator);
     }
 
     public override void Enable()
